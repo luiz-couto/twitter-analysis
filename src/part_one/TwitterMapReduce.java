@@ -14,24 +14,23 @@ import org.json.*;
 
 public class TwitterMapReduce {
 
-    public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
-        // Field @one is the value in all outputs.
-        private final static IntWritable one = new IntWritable(1);
+    public static class TokenizerMapper extends Mapper<Object, Text, Text, Text> {
+        // Field @list will store correlated hashtags for each hashtag on the tweet.
+        private static Text list = new Text();
         // Field @hashtag stores the key in each output. It contains a hashtag
         // found in a twitter text and is initialized by converting String into
         // Text.
         private Text hashtag = new Text();
-        private Integer counter = 0;
 
         /* The map() function breaks down the line of text into words using
-           Java's StringTokenizer class, and then outputs a pair (word, one)
-           for each work in the line. */
+           Java's StringTokenizer class, and then outputs a pair (word, list)
+           for each hashtag in the text field of the line. */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
             String[] tuple = line.split("\\n");
             ArrayList<String> hashtagsList = new ArrayList<String>();
 
-            try{
+            try {
                 for(int i=0;i<tuple.length; i++){
                     JSONObject obj = new JSONObject(tuple[i]);
 
@@ -50,13 +49,18 @@ public class TwitterMapReduce {
                         tagList.remove(tag);
                     }
 
-                    hashtag.set(tag);
-                    System.out.println(tagList);
+                    String finalString = "";
+                    for (String notMe : tagList) {
+                        finalString = finalString + notMe + "\n";
+                    }
 
-                    //context.write(hashtag, one);
+                    //System.out.println(tagList);
+                    hashtag.set(tag);
+                    list.set(finalString);
+                    context.write(hashtag, list);
                 }
 
-            }catch(Exception e){
+            } catch(Exception e) {
                 e.printStackTrace();
             }
 
@@ -75,7 +79,7 @@ public class TwitterMapReduce {
         job.setMapperClass(TokenizerMapper.class);
         //job.setReducerClass(IntSumReducer.class);
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
