@@ -42,8 +42,20 @@ public class TwitterMapReduce {
                             //System.out.println(counter);
                         }
                     }
-                    System.out.println(hashtagsList);
                 }
+
+                for (String tag : hashtagsList) {
+                    ArrayList<String> tagList = new ArrayList<String>(hashtagsList);
+                    while (tagList.contains(tag)) {
+                        tagList.remove(tag);
+                    }
+
+                    hashtag.set(tag);
+                    System.out.println(tagList);
+
+                    //context.write(hashtag, one);
+                }
+
             }catch(Exception e){
                 e.printStackTrace();
             }
