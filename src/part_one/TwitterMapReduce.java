@@ -1,6 +1,6 @@
 package part_one;
 import java.io.IOException;
-import java.util.StringTokenizer;
+import java.util.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -21,21 +21,28 @@ public class TwitterMapReduce {
         // found in a twitter text and is initialized by converting String into
         // Text.
         private Text hashtag = new Text();
+        private Integer counter = 0;
 
         /* The map() function breaks down the line of text into words using
            Java's StringTokenizer class, and then outputs a pair (word, one)
            for each work in the line. */
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            
-            StringTokenizer itr = new StringTokenizer(value.toString());
-            
             String line = value.toString();
             String[] tuple = line.split("\\n");
+            ArrayList<String> hashtagsList = new ArrayList<String>();
 
             try{
                 for(int i=0;i<tuple.length; i++){
                     JSONObject obj = new JSONObject(tuple[i]);
-                    System.out.println(obj.toString());
+
+                    String text = obj.getString("text");
+                    for (String word : text.split(" ")) {
+                        if (word.length() > 0 && word.charAt(0) == '#') {
+                            hashtagsList.add(word);
+                            //System.out.println(counter);
+                        }
+                    }
+                    System.out.println(hashtagsList);
                 }
             }catch(Exception e){
                 e.printStackTrace();
