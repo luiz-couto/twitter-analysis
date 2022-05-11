@@ -38,6 +38,10 @@ public class TwitterMapReduce {
                     String text = obj.getString("text");
                     for (String word : text.split(" ")) {
                         if (word.length() > 0 && word.charAt(0) == '#') {
+                            Character last = word.charAt(word.length()-1);
+                            if (last == ',' || last == '.' || last == '!' || last == ':' || last == ';') {
+                                word = word.substring(0, word.length() - 1);
+                            }
                             hashtagsList.add(word);
                             //System.out.println(counter);
                         }
