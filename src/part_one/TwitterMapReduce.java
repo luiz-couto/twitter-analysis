@@ -119,6 +119,7 @@ public class TwitterMapReduce {
 
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
+        conf.set("mapred.textoutputformat.separator", ",");
         /* We generate a job; specify the Mapper, Combiner, and Reducer
            classes; specify the output key and value types. The
            directories where the inputs are read from and outputs
