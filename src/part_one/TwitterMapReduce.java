@@ -12,6 +12,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.json.*;
 
+import part_one.TwitterMapReduce.TokenizerMapper.TweetReducer;
+
 public class TwitterMapReduce {
 
     public static class TokenizerMapper extends Mapper<Object, Text, Text, Text> {
@@ -66,6 +68,25 @@ public class TwitterMapReduce {
 
         }
 
+        public static class TweetReducer extends Reducer<Text, Text, Text, IntWritable> {
+
+        // Field @result stores how many times a word has appeared.
+        private IntWritable result = new IntWritable();
+
+        /* The reduce() function receives a key and an iterable over all
+           values for that key. We add up the values of all counters and
+           output a pair (word, count). */
+        public void reduce(Text key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
+            int sum = 0;
+            for (Text val : values) {
+                sum += 1;
+            }
+            result.set(sum);
+            ctx.write(key, result);
+        }
+        
+        }
+
     }
 
     public static void main(String[] args) throws Exception {
@@ -77,7 +98,7 @@ public class TwitterMapReduce {
         Job job = Job.getInstance(conf, "twitter-map-reduce");
         job.setJarByClass(TwitterMapReduce.class);
         job.setMapperClass(TokenizerMapper.class);
-        //job.setReducerClass(IntSumReducer.class);
+        job.setReducerClass(TweetReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
