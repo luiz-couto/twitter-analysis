@@ -3,7 +3,6 @@ import java.io.IOException;
 import java.util.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -68,20 +67,49 @@ public class TwitterMapReduce {
 
         }
 
-        public static class TweetReducer extends Reducer<Text, Text, Text, IntWritable> {
+        public static class TweetReducer extends Reducer<Text, Text, Text, Text> {
 
         // Field @result stores how many times a word has appeared.
-        private IntWritable result = new IntWritable();
+        private Text result = new Text();
 
         /* The reduce() function receives a key and an iterable over all
            values for that key. We add up the values of all counters and
            output a pair (word, count). */
         public void reduce(Text key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
             int sum = 0;
+            ArrayList<String> correlated = new ArrayList<String>();
+            
             for (Text val : values) {
+                String str = val.toString();
+                for (String word : str.split("\n")) {
+                    correlated.add(word);
+                }
                 sum += 1;
             }
-            result.set(sum);
+
+            Set<String> set = new HashSet<>(correlated);
+            correlated.clear();
+            correlated.addAll(set);
+
+            String hash_str = "";
+            for (String word : correlated) {
+                if (word != "") {
+                    hash_str = hash_str + word + ",";
+                }
+            }
+
+            hash_str = hash_str.substring(0, hash_str.length() - 1);
+            if (hash_str.length() > 0 && hash_str.charAt(0) == ',') {
+                hash_str = hash_str.substring(1, hash_str.length());
+            }
+
+            if (hash_str.length() > 0 && hash_str.charAt(hash_str.length()-1) == ',') {
+                hash_str = hash_str.substring(0, hash_str.length() - 1);
+            }
+
+            String finalStr = Integer.toString(sum) + "," + "\"" + hash_str + "\"";
+
+            result.set(finalStr);
             ctx.write(key, result);
         }
         
