@@ -56,7 +56,7 @@ public class TwitterMapReduce {
 
                     String finalString = "";
                     for (String notMe : tagList) {
-                        finalString = finalString + notMe + "\n";
+                        finalString = finalString + notMe + ",";
                     }
 
                     //System.out.println(tagList);
@@ -80,41 +80,29 @@ public class TwitterMapReduce {
            values for that key. We add up the values of all counters and
            output a pair (word, count). */
         public void reduce(Text key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
-            int sum = 0;
-            ArrayList<String> correlated = new ArrayList<String>();
+            int num_of_tweets = 0;
+            //Set<String> set = new HashSet<>();
+            String final_str = "";
             
-            for (Text val : values) {
-                String str = val.toString();
-                for (String word : str.split("\n")) {
-                    correlated.add(word);
+            for (Text val : values) {   
+                String hashtag = "";
+                for (int i=0; i < val.getLength(); i++) {
+                    char c = (char) val.charAt(i);
+                    if (c == ',') {
+                        final_str = final_str + hashtag;
+                        hashtag = "";
+                    }
+                    hashtag = hashtag + c;
                 }
-                sum += 1;
+                num_of_tweets += 1;
             }
 
-            Set<String> set = new HashSet<>(correlated);
-            correlated.clear();
-            correlated.addAll(set);
-
-            String hash_str = "";
-            for (String word : correlated) {
-                if (word != "") {
-                    hash_str = hash_str + word + ",";
-                }
+            if (num_of_tweets >= 1) {
+                String finalStr = Integer.toString(num_of_tweets) + "," + "\"" + final_str + "\"";
+                result.set(finalStr);
+                ctx.write(key, result);
             }
 
-            hash_str = hash_str.substring(0, hash_str.length() - 1);
-            if (hash_str.length() > 0 && hash_str.charAt(0) == ',') {
-                hash_str = hash_str.substring(1, hash_str.length());
-            }
-
-            if (hash_str.length() > 0 && hash_str.charAt(hash_str.length()-1) == ',') {
-                hash_str = hash_str.substring(0, hash_str.length() - 1);
-            }
-
-            String finalStr = Integer.toString(sum) + "," + "\"" + hash_str + "\"";
-
-            result.set(finalStr);
-            ctx.write(key, result);
         }
         
         }
