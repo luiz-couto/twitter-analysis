@@ -82,8 +82,6 @@ public class TwitterMapReduce {
         public void reduce(Text key, Iterable<Text> values, Context ctx) throws IOException, InterruptedException {
             int num_of_tweets = 0;
             Set<String> set = new HashSet<>();
-            
-            // ["#aaaaa, #bbbbb, #ccccc,", "#ddddd, #eeeee, #fffff,"]
 
             for (Text val : values) {   
                 String hashtag = "";
@@ -99,11 +97,6 @@ public class TwitterMapReduce {
                 }
                 num_of_tweets += 1;
             }
-
-            for (String s : set) {
-                System.out.println(s);
-            }
-            System.out.println(set.toString());
 
             if (num_of_tweets >= 1) {
                 String finalStr = Integer.toString(num_of_tweets) + "," + set.toString().replace("[", "\"").replace("]", "\"");
